@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  nominatim:
+    image: mediagis/nominatim:4.3
+    container_name: nominatim
+    ports:
+      - "8080:8080"
+    volumes:
+      - nominatim_data:/var/lib/postgresql/14/main
+      - nominatim_flatnode:/nominatim/flatnode
+    environment:
+      - PBF_URL=https://download.geofabrik.de/europe/monaco-latest.osm.pbf
+      - NOMINATIM_MODE=IMPORT_AND_RUN
+      - NOMINATIM_THREADS=4
+      - PORT=8080
+      - REPLICATION_URL=https://download.geofabrik.de/europe/monaco-updates/
+      - REPLICATION_UPDATE_INTERVAL=86400
+    restart: always
+    x-tinkr:
+      cpu: 1024
+      memory: 2048
+      network:
+        public: true
+      ports:
+        nominatim-8080:
+          port: 8080
+          protocol: http
+          public: true
+          healthcheck:
+            timeout: 30
+            interval: 60
+            path: /status.php
+            retries: 3
+            success_code: 200-399
+
+volumes:
+  nominatim_data:
+  nominatim_flatnode:
